@@ -89,6 +89,23 @@ debug           0 does not print analysis details to the log and 1 prints analys
 		%goto stopmac;
 	%end;
 
+	data _null_;
+		 %let dsid=%sysfunc(open(&DSNIN));
+		 %let checkPID=%sysfunc(varnum(&dsid,&PID));
+		 %let checkARM=%sysfunc(varnum(&dsid,&ARM));
+		 %if (&checkPID=0) %then 
+		 	%let missing_var = &PID;
+		 %else %if (&checkARM=0) %then
+		 	%let missing_var = &ARM;
+		 %else
+		 	%let missing_var = "_NONE";
+	run;
+
+	%if &missing_var ne "_NONE" %then %do;
+		%put ERROR: &missing_var not in &DSNIN;
+		%goto stopmac;
+	%end;
+		
 	proc freq data = &DSNIN.;
 		tables &PID. / noprint out = _idlist;
 	run;
@@ -116,6 +133,43 @@ debug           0 does not print analysis details to the log and 1 prints analys
 			call symput("num_covars", left(countw(compbl("&COVARS"), " ")));
 		%end;
 	run;
+
+	data _null_;
+		%let missing_var2 = "_BLANK";
+		%let dsid=%sysfunc(open(&DSNIN));
+		%do vis = 1 %to &num_visits;
+			%let var = %SCAN("&OUTCOMES.",&vis.," ");
+			%if (%sysfunc(varnum(&dsid,&var))=0) %then %do;
+		 		%let missing_var2 = &var;
+				%goto stopdata;
+			%end;
+		%end;
+		%do vis = 1 %to &num_covars;
+			%let var = %SCAN("&COVARS.",&vis.," ");
+			%if (%sysfunc(varnum(&dsid,&var))=0) %then %do;
+		 		%let missing_var2 = &var;
+				%goto stopdata;
+			%end;
+		%end;
+		%if &BASELINE. ne NONE %then %do;
+			%if (%sysfunc(varnum(&dsid,&BASELINE))=0) %then %do;
+		 		%let missing_var2 = &BASELINE;
+				%goto stopdata;
+			%end;
+		%end;
+		%if &STRATA. ne NONE %then %do;
+			%if (%sysfunc(varnum(&dsid,&STRATA))=0) %then %do;
+		 		%let missing_var2 = &STRATA;
+				%goto stopdata;
+			%end;
+		%end;
+		%stopdata:;
+	run;
+
+	%if &missing_var2 ne "_BLANK" %then %do;
+		%put ERROR: &missing_var2 not in &DSNIN;
+		%goto stopmac;
+	%end;	
 
 	data _local_dsnin;
 		set &DSNIN.;
