@@ -13,7 +13,7 @@ Gary G. Koch, Ph.D.
 Arguments:
 
 dsnin 			SAS dataset containing the analysis data. Must be in wide 
-				format such that a participant’s repeated responses are in 
+				format such that a participant's repeated responses are in 
 				a single row and each response is a separate column.
  
 dsnout			Name for output dataset.
@@ -25,7 +25,7 @@ outcomes        List of the variables (each separated by a space) corresponding
 				least an ordinal measurement scale with larger values being 
 				better than smaller values. Thus, the outcome can be ordered 
 				categories or continuous measurements or dichotomies such as 0 
-				or 1 or "no" or "yes".�
+				or 1 or "no" or "yes".
  
 arm             Variable for treatment arm.  Required to be a positive
                 integer such that the test treatment arm is ALWAYS higher
