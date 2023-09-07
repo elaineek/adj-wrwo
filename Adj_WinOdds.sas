@@ -8,7 +8,7 @@ Ann Marie Weideman, M.S.
 Elaine Kearney Kowalewski, M.S.
 Gary G. Koch, Ph.D.
 
-2023-05-04	  	Version 0
+2023-09-07	  	Version 1
 
 Arguments:
 
@@ -25,7 +25,7 @@ outcomes        List of the variables (each separated by a space) corresponding
 				least an ordinal measurement scale with larger values being 
 				better than smaller values. Thus, the outcome can be ordered 
 				categories or continuous measurements or dichotomies such as 0 
-				or 1 or “no” or “yes.”
+				or 1 or "no" or "yes".�
  
 arm             Variable for treatment arm.  Required to be a positive
                 integer such that the test treatment arm is ALWAYS higher
@@ -676,12 +676,18 @@ debug           0 does not print analysis details to the log and 1 prints analys
 		p_b = 1-probchi(chi_b, 1);
 
 		logWOj =  b||se_b||chi_b||p_b;
-			create _outds from logWOj[colname={"logWO" "SE logWO" "Chi Square" "p-value"}];
-			append from logWOj;
+		create _outds from logWOj[colname={"logWO" "SE logWO" "Chi Square" "p-value"}];
+		append from logWOj;
+
+		create &DSNOUT._b from b[colname={'b'}];
+		append from b;
+
+		create &DSNOUT._Vb from V_b[colname={&OUTCOMES.}];
+		append from V_b;
 
 	QUIT;
 
-	data Outcomes;
+	data _Outcomes;
 		%do i=1 %to &num_visits.;
 		Visit = "%scan(&OUTCOMES., &i)";
 		output;
@@ -689,7 +695,7 @@ debug           0 does not print analysis details to the log and 1 prints analys
 	run;
 	
 	data &DSNOUT;
-		merge Outcomes _outds;
+		merge _Outcomes _outds;
 		WO = exp(logWO);
 		WO_CI = cats("(", put(exp(logWO - 1.96*SE_logWO), 6.2), ", ", put(exp(logWO + 1.96*SE_logWO), 6.2), ")");
 		WP = WO / (1 + WO);
@@ -710,7 +716,7 @@ debug           0 does not print analysis details to the log and 1 prints analys
 	run;
 
 	proc datasets nolist;
-		delete Outcomes _outds _local_dsnin;
+		delete _Outcomes _outds _local_dsnin;
 	quit;
 	%stopmac:;
 %MEND Adj_WinOdds;
